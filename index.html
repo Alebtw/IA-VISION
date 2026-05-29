@@ -1,0 +1,795 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>IA VISION — Detección de Somnolencia con IA</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg:       #030712;
+      --panel:    #060e1f;
+      --card:     rgba(6,20,46,0.65);
+      --border:   rgba(0,210,255,0.12);
+      --hi:       rgba(0,210,255,0.45);
+      --cyan:     #00d2ff;
+      --cglow:    rgba(0,210,255,0.15);
+      --red:      #ff3a3a;
+      --amber:    #ffb800;
+      --green:    #00ff88;
+      --t1:       #e2eeff;
+      --t2:       #7b93b8;
+      --t3:       #3d5478;
+      --mono:     'Space Mono',monospace;
+      --disp:     'Syne',sans-serif;
+      --body:     'DM Sans',sans-serif;
+      --r:        16px;
+      --rs:       10px;
+    }
+    *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+    html{scroll-behavior:smooth;font-size:16px}
+    body{font-family:var(--body);background:var(--bg);color:var(--t1);overflow-x:hidden}
+    body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(0,210,255,.025) 1px,transparent 1px),linear-gradient(90deg,rgba(0,210,255,.025) 1px,transparent 1px);background-size:56px 56px;pointer-events:none;z-index:0}
+    section,nav,footer{position:relative;z-index:1}
+
+    /* NAV */
+    nav{position:fixed;top:0;left:0;right:0;display:flex;align-items:center;justify-content:space-between;padding:0 60px;height:68px;background:rgba(3,7,18,.9);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);z-index:100}
+    .nav-logo{font-family:var(--disp);font-weight:800;font-size:22px;letter-spacing:-.5px;color:var(--t1)}
+    .nav-logo span{color:var(--cyan)}
+    .nav-links{display:flex;gap:4px;list-style:none}
+    .nav-links a{font-size:13px;font-weight:500;color:var(--t2);text-decoration:none;padding:8px 14px;border-radius:var(--rs);transition:color .2s,background .2s}
+    .nav-links a:hover{color:var(--t1);background:rgba(255,255,255,.04)}
+    .nav-cta{background:var(--cyan)!important;color:#000!important;font-weight:700!important;border-radius:var(--rs)!important;transition:box-shadow .2s,transform .2s!important}
+    .nav-cta:hover{box-shadow:0 6px 24px rgba(0,210,255,.35)!important;transform:translateY(-1px);color:#000!important}
+
+    /* HERO */
+    #inicio{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:120px 40px 80px;position:relative}
+    #inicio::before{content:'';position:absolute;top:50%;left:50%;transform:translate(-50%,-60%);width:900px;height:600px;background:radial-gradient(ellipse,rgba(0,210,255,.07) 0%,transparent 70%);pointer-events:none}
+    .hero-ey{font-family:var(--mono);font-size:11px;letter-spacing:.25em;text-transform:uppercase;color:var(--cyan);opacity:.8;margin-bottom:24px;display:flex;align-items:center;gap:12px;justify-content:center;animation:fadeUp .8s ease both}
+    .hero-ey::before,.hero-ey::after{content:'';display:inline-block;width:40px;height:1px;background:var(--cyan);opacity:.4}
+    .hero-title{font-family:var(--disp);font-weight:800;font-size:clamp(48px,7vw,96px);line-height:.95;letter-spacing:-3px;color:var(--t1);margin-bottom:12px;animation:fadeUp .8s .1s ease both}
+    .hero-title .ac{color:var(--cyan)}
+    .hero-title .dm{color:var(--t3)}
+    .hero-sub{font-size:clamp(16px,2vw,20px);color:var(--t2);font-weight:300;max-width:620px;line-height:1.65;margin:20px auto 48px;animation:fadeUp .8s .2s ease both}
+    .hero-act{display:flex;gap:16px;justify-content:center;flex-wrap:wrap;animation:fadeUp .8s .3s ease both}
+    .btn-p{background:var(--cyan);color:#000;font-family:var(--disp);font-weight:700;font-size:14px;padding:14px 32px;border-radius:var(--rs);text-decoration:none;transition:box-shadow .2s,transform .2s;letter-spacing:.02em}
+    .btn-p:hover{box-shadow:0 8px 32px rgba(0,210,255,.35);transform:translateY(-2px)}
+    .btn-s{background:rgba(255,255,255,.04);color:var(--t1);font-family:var(--disp);font-weight:600;font-size:14px;padding:14px 32px;border-radius:var(--rs);border:1px solid var(--border);text-decoration:none;transition:border-color .2s,background .2s}
+    .btn-s:hover{border-color:var(--hi);background:var(--cglow)}
+    .hero-badges{display:flex;gap:20px;justify-content:center;flex-wrap:wrap;margin-top:64px;animation:fadeUp .8s .45s ease both}
+    .chip{display:flex;align-items:center;gap:9px;background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:100px;padding:10px 18px;font-family:var(--mono);font-size:10px;letter-spacing:.1em;color:var(--t2)}
+    .dot{width:7px;height:7px;border-radius:50%}
+    .dg{background:var(--green);box-shadow:0 0 8px var(--green)}
+    .dc{background:var(--cyan);box-shadow:0 0 8px var(--cyan)}
+    .da{background:var(--amber);box-shadow:0 0 8px var(--amber)}
+    .scroll-cue{position:absolute;bottom:32px;left:50%;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:6px;animation:fadeUp 1s .7s ease both}
+    .scroll-cue span{font-family:var(--mono);font-size:9px;letter-spacing:.2em;color:var(--t3);text-transform:uppercase}
+    .scroll-arr{width:20px;height:20px;border-right:1px solid var(--t3);border-bottom:1px solid var(--t3);transform:rotate(45deg);animation:bounce 1.8s ease-in-out infinite}
+    @keyframes bounce{0%,100%{transform:rotate(45deg) translateY(0)}50%{transform:rotate(45deg) translateY(5px)}}
+
+    /* SECTION SHARED */
+    .wrap{padding:100px 60px;max-width:1200px;margin:0 auto}
+    .s-ey{font-family:var(--mono);font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:var(--cyan);opacity:.75;margin-bottom:14px;display:flex;align-items:center;gap:10px}
+    .s-ey::before{content:'';display:inline-block;width:24px;height:1px;background:var(--cyan);opacity:.5}
+    .s-title{font-family:var(--disp);font-weight:800;font-size:clamp(32px,4vw,52px);letter-spacing:-1.5px;line-height:1.05;color:var(--t1);margin-bottom:16px}
+    .s-desc{font-size:16px;color:var(--t2);font-weight:300;line-height:1.75;max-width:640px}
+    .alt-bg{background:rgba(6,14,31,.4);border-top:1px solid var(--border);border-bottom:1px solid var(--border)}
+
+    /* CARD */
+    .card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:28px;backdrop-filter:blur(16px);transition:border-color .25s,transform .25s;position:relative;overflow:hidden}
+    .card::before{content:'';position:absolute;top:0;left:0;width:60px;height:60px;background:radial-gradient(circle at 0% 0%,rgba(0,210,255,.08) 0%,transparent 70%)}
+    .card:hover{border-color:var(--hi);transform:translateY(-3px)}
+    .card-tag{font-family:var(--mono);font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:var(--t2);margin-bottom:12px;display:flex;align-items:center;gap:6px}
+    .card-tag::before{content:'';display:inline-block;width:12px;height:1px;background:var(--cyan);opacity:.5}
+    .card-val{font-family:var(--mono);font-size:44px;font-weight:700;color:var(--cyan);line-height:1;margin-bottom:8px;letter-spacing:-2px}
+    .card-val.red{color:var(--red)}
+    .card-val.amber{color:var(--amber)}
+    .card-val.green{color:var(--green)}
+    .card-lbl{font-size:12px;color:var(--t3);font-weight:300;letter-spacing:.02em}
+
+    /* HERO PROBLEM NUMBERS */
+    .prob-nums{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin-top:56px}
+    .prob-num{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:32px 24px;text-align:center;backdrop-filter:blur(16px);transition:border-color .25s,transform .25s;position:relative;overflow:hidden}
+    .prob-num:hover{border-color:var(--hi);transform:translateY(-4px)}
+    .prob-num::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--nc,var(--red))}
+    .pn-val{font-family:var(--mono);font-size:48px;font-weight:700;line-height:1;letter-spacing:-2px;margin-bottom:8px;color:var(--nc,var(--red))}
+    .pn-lbl{font-size:13px;color:var(--t2);font-weight:300;line-height:1.5}
+    .pn-src{font-family:var(--mono);font-size:9px;color:var(--t3);letter-spacing:.1em;text-transform:uppercase;margin-top:8px}
+
+    /* PROBLEMA - 2 col */
+    .prob-grid{display:grid;grid-template-columns:1fr 1fr;gap:60px;align-items:center;margin-top:56px}
+    .prob-list{list-style:none;display:flex;flex-direction:column;gap:16px}
+    .prob-list li{display:flex;gap:14px;align-items:flex-start}
+    .pl-icon{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+    .pl-icon.red{background:rgba(255,58,58,.1);border:1px solid rgba(255,58,58,.2)}
+    .pl-icon.cyan{background:rgba(0,210,255,.1);border:1px solid rgba(0,210,255,.2)}
+    .pl-icon.amber{background:rgba(255,184,0,.1);border:1px solid rgba(255,184,0,.2)}
+    .pl-text strong{display:block;font-size:14px;font-weight:600;margin-bottom:3px}
+    .pl-text span{font-size:13px;color:var(--t2);font-weight:300;line-height:1.5}
+
+    /* TERMINAL */
+    .terminal-box{background:var(--card);border:1px solid var(--border);border-radius:24px;padding:36px;backdrop-filter:blur(16px);position:relative;overflow:hidden}
+    .terminal-box::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--cyan),transparent)}
+    .terminal{font-family:var(--mono);font-size:12px;line-height:2;color:var(--t2)}
+    .tc{color:var(--cyan)}.tg{color:var(--green)}.ta{color:var(--amber)}.tr{color:var(--red)}.td{color:var(--t3)}
+    .prompt{color:var(--cyan);margin-right:8px}
+    .cursor{display:inline-block;width:8px;height:14px;background:var(--cyan);animation:blink 1.1s step-end infinite;vertical-align:middle;margin-left:2px}
+    @keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+
+    /* TECH GRID */
+    .tech-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-top:56px}
+    .tech-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:28px 24px;backdrop-filter:blur(16px);transition:border-color .25s,transform .25s;position:relative;overflow:hidden}
+    .tech-card::before{content:'';position:absolute;bottom:0;left:0;right:0;height:2px;background:var(--tc,var(--cyan));opacity:.4;transition:opacity .25s}
+    .tech-card:hover{border-color:var(--hi);transform:translateY(-4px)}
+    .tech-card:hover::before{opacity:1}
+    .tech-icon{font-size:32px;margin-bottom:14px;display:block}
+    .tech-name{font-family:var(--disp);font-weight:700;font-size:15px;color:var(--t1);margin-bottom:6px}
+    .tech-desc{font-size:12px;color:var(--t2);line-height:1.6;font-weight:300}
+    .tech-tag{font-family:var(--mono);font-size:9px;letter-spacing:.12em;text-transform:uppercase;padding:4px 9px;border-radius:100px;background:rgba(0,210,255,.07);border:1px solid rgba(0,210,255,.15);color:var(--cyan);display:inline-block;margin-top:12px}
+
+    /* STATS GRID */
+    .stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:20px;margin-top:56px}
+    .stat-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:32px 24px;text-align:center;backdrop-filter:blur(16px);transition:border-color .25s,transform .25s;position:relative;overflow:hidden}
+    .stat-card:hover{border-color:var(--hi);transform:translateY(-4px)}
+    .stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--sc,var(--cyan))}
+    .stat-num{font-family:var(--mono);font-size:48px;font-weight:700;color:var(--cyan);line-height:1;letter-spacing:-2px;margin-bottom:8px}
+    .stat-num.red{color:var(--red)}.stat-num.amber{color:var(--amber)}.stat-num.green{color:var(--green)}
+    .stat-lbl{font-size:13px;color:var(--t2);font-weight:300;line-height:1.5}
+    .stat-src{font-family:var(--mono);font-size:9px;color:var(--t3);letter-spacing:.1em;text-transform:uppercase;margin-top:8px}
+
+    /* PROCESO */
+    .proceso-steps{display:grid;grid-template-columns:repeat(5,1fr);gap:0;margin-top:56px;position:relative}
+    .proceso-steps::before{content:'';position:absolute;top:36px;left:10%;right:10%;height:1px;background:linear-gradient(90deg,transparent,var(--cyan),transparent);opacity:.3}
+    .step{display:flex;flex-direction:column;align-items:center;text-align:center;padding:20px 16px;position:relative}
+    .step-num{width:72px;height:72px;border-radius:50%;background:var(--card);border:2px solid var(--border);display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:20px;font-weight:700;color:var(--cyan);margin-bottom:16px;transition:border-color .25s,box-shadow .25s;position:relative;z-index:1}
+    .step:hover .step-num{border-color:var(--hi);box-shadow:0 0 24px rgba(0,210,255,.2)}
+    .step-title{font-family:var(--disp);font-weight:700;font-size:13px;color:var(--t1);margin-bottom:6px}
+    .step-desc{font-size:11px;color:var(--t2);font-weight:300;line-height:1.6}
+
+    /* COMPETITIVO */
+    .comp-table{margin-top:56px;background:var(--card);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;backdrop-filter:blur(16px)}
+    .comp-table table{width:100%;border-collapse:collapse}
+    .comp-table th{padding:16px 20px;font-family:var(--mono);font-size:10px;letter-spacing:.15em;text-transform:uppercase;color:var(--t2);border-bottom:1px solid var(--border);text-align:left}
+    .comp-table th:last-child{color:var(--cyan)}
+    .comp-table td{padding:14px 20px;font-size:13px;color:var(--t2);border-bottom:1px solid rgba(255,255,255,.03);font-weight:300}
+    .comp-table tr:last-child td{border-bottom:none}
+    .comp-table td:last-child{color:var(--green);font-weight:500}
+    .comp-table td:first-child{color:var(--t3)}
+    .comp-table tr:hover td{background:rgba(255,255,255,.02)}
+
+    /* MERCADO */
+    .mercado-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:56px}
+    .mkt-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:24px;backdrop-filter:blur(16px);transition:border-color .25s,transform .25s}
+    .mkt-card:hover{border-color:var(--hi);transform:translateY(-3px)}
+    .mkt-icon{font-size:28px;margin-bottom:12px;display:block}
+    .mkt-name{font-family:var(--disp);font-weight:700;font-size:15px;color:var(--t1);margin-bottom:6px}
+    .mkt-desc{font-size:12px;color:var(--t2);line-height:1.6;font-weight:300}
+
+    /* NEGOCIO */
+    .biz-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:20px;margin-top:56px}
+    .biz-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:32px;backdrop-filter:blur(16px);transition:border-color .25s,transform .25s;position:relative;overflow:hidden}
+    .biz-card:hover{border-color:var(--hi);transform:translateY(-3px)}
+    .biz-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--bc,var(--cyan));opacity:.6}
+    .biz-icon{font-size:32px;margin-bottom:16px;display:block}
+    .biz-title{font-family:var(--disp);font-weight:700;font-size:18px;color:var(--t1);margin-bottom:8px;letter-spacing:-.3px}
+    .biz-desc{font-size:13px;color:var(--t2);line-height:1.7;font-weight:300}
+    .biz-tag{font-family:var(--mono);font-size:9px;letter-spacing:.12em;text-transform:uppercase;padding:4px 9px;border-radius:100px;background:rgba(0,210,255,.07);border:1px solid rgba(0,210,255,.15);color:var(--cyan);display:inline-block;margin-top:14px}
+
+    /* VIDEO */
+    .video-wrap{margin-top:52px;border-radius:24px;overflow:hidden;border:1px solid var(--border);background:var(--card);position:relative}
+    .video-ph{aspect-ratio:16/9;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;background:linear-gradient(135deg,#060e1f 0%,#0b1829 100%)}
+    .play-btn{width:72px;height:72px;border-radius:50%;background:var(--cyan);display:flex;align-items:center;justify-content:center;font-size:26px;cursor:pointer;transition:box-shadow .2s,transform .2s;text-decoration:none;color:#000}
+    .play-btn:hover{box-shadow:0 0 40px rgba(0,210,255,.5);transform:scale(1.08)}
+    .video-ph p{font-family:var(--mono);font-size:11px;letter-spacing:.15em;color:var(--t2);text-transform:uppercase}
+
+    /* PREMIOS */
+    .awards-grid{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-top:56px}
+    .award-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:36px;backdrop-filter:blur(16px);transition:border-color .25s,transform .25s;display:flex;gap:24px;align-items:flex-start;position:relative;overflow:hidden}
+    .award-card:hover{border-color:var(--hi);transform:translateY(-4px)}
+    .award-card::before{content:'';position:absolute;top:0;left:0;bottom:0;width:2px;background:var(--amber)}
+    .award-trophy{font-size:44px;flex-shrink:0;line-height:1}
+    .award-place{font-family:var(--mono);font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--amber);margin-bottom:8px}
+    .award-title{font-family:var(--disp);font-weight:700;font-size:18px;color:var(--t1);margin-bottom:6px;letter-spacing:-.3px}
+    .award-desc{font-size:13px;color:var(--t2);line-height:1.65;font-weight:300}
+    .gallery-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:32px}
+    .gallery-item{border-radius:var(--r);overflow:hidden;border:1px solid var(--border);aspect-ratio:4/3;background:linear-gradient(135deg,#060e1f,#0b1829);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:10px;transition:border-color .25s,transform .25s;position:relative}
+    .gallery-item:hover{border-color:var(--hi);transform:scale(1.02)}
+    .gallery-item img{width:100%;height:100%;object-fit:cover;position:absolute;inset:0}
+    .gph{font-family:var(--mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--t3);text-align:center}
+
+    /* DEVS */
+    .devs-grid{display:grid;grid-template-columns:1fr 1fr;gap:32px;margin-top:56px}
+    .dev-card{background:var(--card);border:1px solid var(--border);border-radius:24px;padding:40px;backdrop-filter:blur(16px);transition:border-color .25s,transform .25s;position:relative;overflow:hidden}
+    .dev-card:hover{border-color:var(--hi);transform:translateY(-4px)}
+    .dev-card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--cyan),transparent);opacity:.5}
+    .dev-avatar{width:72px;height:72px;border-radius:50%;border:2px solid var(--hi);margin-bottom:20px;background:linear-gradient(135deg,#0b1829,#060e1f);display:flex;align-items:center;justify-content:center;font-size:28px;overflow:hidden}
+    .dev-name{font-family:var(--disp);font-weight:800;font-size:24px;letter-spacing:-.5px;color:var(--t1);margin-bottom:4px}
+    .dev-role{font-family:var(--mono);font-size:10px;letter-spacing:.15em;text-transform:uppercase;color:var(--cyan);opacity:.8;margin-bottom:6px}
+    .dev-career{font-family:var(--mono);font-size:10px;letter-spacing:.1em;color:var(--t3);margin-bottom:16px}
+    .dev-tags{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px}
+    .dev-tag{font-family:var(--mono);font-size:9px;letter-spacing:.1em;text-transform:uppercase;padding:5px 10px;border-radius:100px;background:rgba(0,210,255,.07);border:1px solid rgba(0,210,255,.15);color:var(--cyan)}
+    .dev-bio{font-size:14px;color:var(--t2);line-height:1.75;font-weight:300;margin-bottom:24px}
+    .dev-links{display:flex;gap:10px;flex-wrap:wrap}
+    .dev-link{display:inline-flex;align-items:center;gap:7px;font-family:var(--mono);font-size:10px;letter-spacing:.08em;color:var(--t2);text-decoration:none;background:rgba(255,255,255,.04);border:1px solid var(--border);padding:9px 14px;border-radius:var(--rs);transition:color .2s,border-color .2s,background .2s}
+    .dev-link:hover{color:var(--cyan);border-color:var(--hi);background:var(--cglow)}
+    .dev-link svg{width:13px;height:13px;fill:currentColor}
+
+    /* CONTACTO */
+    .contact-box{margin-top:56px;background:var(--card);border:1px solid var(--border);border-radius:24px;padding:60px;backdrop-filter:blur(16px);text-align:center;position:relative;overflow:hidden}
+    .contact-box::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--cyan),transparent)}
+    .contact-title{font-family:var(--disp);font-weight:800;font-size:clamp(28px,4vw,44px);letter-spacing:-1px;color:var(--t1);margin-bottom:16px}
+    .contact-desc{font-size:16px;color:var(--t2);font-weight:300;max-width:520px;margin:0 auto 40px;line-height:1.7}
+    .contact-links{display:flex;gap:16px;justify-content:center;flex-wrap:wrap}
+
+    /* FOOTER */
+    footer{border-top:1px solid var(--border);padding:32px 60px;display:flex;align-items:center;justify-content:space-between}
+    .footer-logo{font-family:var(--disp);font-weight:800;font-size:18px;color:var(--t1)}
+    .footer-logo span{color:var(--cyan)}
+    .footer-copy{font-family:var(--mono);font-size:10px;color:var(--t3);letter-spacing:.1em}
+
+    /* LIVE BADGE */
+    .live-badge{display:inline-flex;align-items:center;gap:6px;font-family:var(--mono);font-size:9px;letter-spacing:.15em;text-transform:uppercase;color:var(--green);background:rgba(0,255,136,.08);border:1px solid rgba(0,255,136,.2);padding:5px 10px;border-radius:100px}
+    .live-badge::before{content:'';display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--green);animation:pdot 2s ease-in-out infinite}
+    @keyframes pdot{0%,100%{opacity:1;box-shadow:0 0 6px var(--green)}50%{opacity:.6;box-shadow:0 0 14px var(--green)}}
+
+    /* SECTION HEADER */
+    .sh{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px}
+    .sh-title{font-family:var(--disp);font-weight:700;font-size:16px;color:var(--t1);letter-spacing:-.3px;display:flex;align-items:center;gap:10px}
+    .sh-title::before{content:'';display:inline-block;width:3px;height:18px;background:var(--cyan);border-radius:2px}
+
+    /* ANIMATIONS */
+    @keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:none}}
+    .reveal{opacity:0;transform:translateY(24px);transition:opacity .65s ease,transform .65s ease}
+    .reveal.visible{opacity:1;transform:none}
+
+    /* SCROLLBAR */
+    ::-webkit-scrollbar{width:4px}
+    ::-webkit-scrollbar-track{background:transparent}
+    ::-webkit-scrollbar-thumb{background:var(--hi);border-radius:4px}
+
+    /* RESPONSIVE */
+    @media(max-width:900px){
+      nav{padding:0 24px}.nav-links{display:none}
+      .wrap{padding:72px 24px}
+      #inicio{padding:100px 24px 72px}
+      .prob-grid,.devs-grid,.awards-grid,.biz-grid{grid-template-columns:1fr}
+      .stats-grid,.prob-nums{grid-template-columns:repeat(2,1fr)}
+      .proceso-steps{grid-template-columns:1fr;gap:16px}.proceso-steps::before{display:none}
+      .gallery-grid{grid-template-columns:1fr 1fr}
+      .mercado-grid{grid-template-columns:1fr 1fr}
+      footer{flex-direction:column;gap:12px;text-align:center;padding:28px 24px}
+      .contact-box{padding:40px 24px}
+    }
+  </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-logo">IA<span>&nbsp;VISION</span></div>
+  <ul class="nav-links">
+    <li><a href="#inicio">Inicio</a></li>
+    <li><a href="#problema">Problema</a></li>
+    <li><a href="#tecnologias">Tecnologías</a></li>
+    <li><a href="#estadisticas">Stats</a></li>
+    <li><a href="#premios">Premios</a></li>
+    <li><a href="#desarrolladores">Equipo</a></li>
+    <li><a href="#contacto" class="nav-cta">Contacto</a></li>
+  </ul>
+</nav>
+
+<!-- HERO -->
+<section id="inicio">
+  <p class="hero-ey">Premio a la Innovación Mexicana 2026 · UMM Monterrey</p>
+  <h1 class="hero-title">
+    <span class="dm">Detectamos</span><br>
+    la <span class="ac">somnolencia</span><br>
+    <span class="dm">antes del accidente.</span>
+  </h1>
+  <p class="hero-sub">
+    Plataforma de monitoreo biométrico facial en tiempo real que detecta micro-sueños
+    y cabezazos mediante inteligencia artificial. Desarrollado en Monterrey para el sector
+    logístico, industrial y de transporte de México.
+  </p>
+  <div class="hero-act">
+    <a href="#problema" class="btn-p">Conoce el proyecto →</a>
+    <a href="#video" class="btn-s">▶ Ver demo</a>
+  </div>
+  <div class="hero-badges">
+    <div class="chip"><span class="dot dg"></span>SISTEMA EN TIEMPO REAL</div>
+    <div class="chip"><span class="dot dc"></span>VISIÓN ARTIFICIAL · MEDIAPIPE</div>
+    <div class="chip"><span class="dot da"></span>2 PREMIOS CONSECUTIVOS · 2026</div>
+  </div>
+  <div class="scroll-cue"><span>scroll</span><div class="scroll-arr"></div></div>
+</section>
+
+<!-- PROBLEMA -->
+<section id="problema">
+  <div class="wrap reveal">
+    <p class="s-ey">El Problema</p>
+    <h2 class="s-title">La fatiga es una<br>amenaza silenciosa.</h2>
+    <p class="s-desc">
+      Más de 13,000 accidentes anuales en México están relacionados con somnolencia y fatiga
+      en el sector logístico, transporte y maquinaria pesada — y la tendencia va en aumento.
+    </p>
+
+    <!-- 3 big numbers -->
+    <div class="prob-nums">
+      <div class="prob-num" style="--nc:var(--red)">
+        <div class="pn-val">+13K</div>
+        <div class="pn-lbl">accidentes anuales relacionados con fatiga en México</div>
+        <div class="pn-src">INEGI · IMT · 2026</div>
+      </div>
+      <div class="prob-num" style="--nc:var(--amber)">
+        <div class="pn-val" style="color:var(--amber)">35%</div>
+        <div class="pn-lbl">involucran transporte pesado o maquinaria industrial</div>
+        <div class="pn-src">INEGI · INNOVAFEST 2026</div>
+      </div>
+      <div class="prob-num" style="--nc:var(--cyan)">
+        <div class="pn-val" style="color:var(--cyan)">50%</div>
+        <div class="pn-lbl">menos tiempo de reacción en conductores con fatiga</div>
+        <div class="pn-src">Estimación técnica IMT</div>
+      </div>
+    </div>
+
+    <!-- detail + terminal -->
+    <div class="prob-grid" style="margin-top:48px">
+      <ul class="prob-list">
+        <li>
+          <div class="pl-text">
+            <strong>Transporte de carga sin monitoreo</strong>
+            <span>Los operadores de tráiler enfrentan jornadas extensas, rutas nocturnas y presión operativa sin ningún sistema que detecte su estado de alerta.</span>
+          </div>
+        </li>
+        <li>
+          <div class="pl-text">
+            <strong>Maquinaria pesada en riesgo</strong>
+            <span>Excavadoras, montacargas y grúas operadas por personal fatigado representan riesgo crítico en construcción, minería e industria.</span>
+          </div>
+        </li>
+        <li>
+          <div class="pl-text">
+            <strong>Pérdidas millonarias prevenibles</strong>
+            <span>Accidentes por fatiga generan costos médicos, demandas legales, pérdida de mercancía e incremento de seguros que afectan la rentabilidad operativa.</span>
+          </div>
+        </li>
+      </ul>
+
+      <div class="terminal-box">
+        <div class="terminal">
+          <div><span class="td"># Análisis de incidente · 03:42 AM</span></div>
+          <div><span class="prompt">›</span><span class="tc">ia_vision</span>.analyze(driver)</div>
+          <div><span class="td">────────────────────────</span></div>
+          <div><span class="tc">EAR izquierdo:</span>  <span class="tr">0.018</span> <span class="td">← crítico</span></div>
+          <div><span class="tc">EAR derecho:</span>    <span class="tr">0.016</span> <span class="td">← crítico</span></div>
+          <div><span class="tc">Pose nariz:</span>     <span class="ta">+0.041</span> <span class="td">← cabeceo</span></div>
+          <div><span class="tc">Parpadeos/10s:</span>  <span class="tr">7</span> <span class="td">← umbral: 3</span></div>
+          <div><span class="td">────────────────────────</span></div>
+          <div><span class="tr">⚡ ALERTA:</span> Micro sueño detectado</div>
+          <div><span class="tr">⚡ ALERTA:</span> Cabezazo detectado</div>
+          <div><span class="td">────────────────────────</span></div>
+          <div><span class="tg">✓</span> Evento guardado en DB</div>
+          <div><span class="tg">✓</span> Dashboard actualizado</div>
+          <div>&nbsp;</div>
+          <div><span class="prompt">›</span><span class="cursor"></span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TECNOLOGIAS -->
+<section id="tecnologias" class="alt-bg">
+  <div class="wrap reveal">
+    <p class="s-ey">Stack Tecnológico</p>
+    <h2 class="s-title">Construido con las<br>mejores herramientas.</h2>
+    <p class="s-desc">Visión computacional, backend robusto y frontend reactivo integrados en un sistema preventivo completo y escalable.</p>
+    <div class="tech-grid">
+      <div class="tech-card" style="--tc:#3776ab">
+        <div class="tech-name">Python</div>
+        <div class="tech-desc">Lenguaje principal. Orquesta la lógica de detección facial, base de datos y servidor web en un solo proceso multihilo.</div>
+        <span class="tech-tag">CORE</span>
+      </div>
+      <div class="tech-card" style="--tc:var(--cyan)">
+        <div class="tech-name">MediaPipe</div>
+        <div class="tech-desc">Framework de Google para detección de Face Mesh con 468 landmarks faciales en tiempo real a alta velocidad.</div>
+        <span class="tech-tag">IA / CV</span>
+      </div>
+      <div class="tech-card" style="--tc:#e34c26">
+        <div class="tech-name">OpenCV</div>
+        <div class="tech-desc">Captura y procesamiento de video. Cálculo de distancias euclidianas entre puntos oculares para detección de parpadeo.</div>
+        <span class="tech-tag">VISIÓN</span>
+      </div>
+      <div class="tech-card" style="--tc:#009688">
+        <div class="tech-name">Flask</div>
+        <div class="tech-desc">Servidor web con autenticación de usuarios, rutas REST y entrega del dashboard en tiempo real con flask-login.</div>
+        <span class="tech-tag">BACKEND</span>
+      </div>
+      <div class="tech-card" style="--tc:#64b5f6">
+        <div class="tech-name">SQLite</div>
+        <div class="tech-desc">Base de datos embebida para persistencia de eventos con timestamp. Ligera, sin dependencias externas.</div>
+        <span class="tech-tag">BASE DE DATOS</span>
+      </div>
+      <div class="tech-card" style="--tc:#ff6384">
+        <div class="tech-name">Chart.js</div>
+        <div class="tech-desc">Visualización dinámica con gráficas de línea actualizadas cada 2 segundos mostrando micro-sueños y cabezazos.</div>
+        <span class="tech-tag">FRONTEND</span>
+      </div>
+    </div>
+
+    <!-- PROCESO 5 etapas -->
+    <div style="margin-top:80px">
+      <p class="s-ey">Funcionamiento del Sistema</p>
+      <h3 style="font-family:var(--disp);font-weight:700;font-size:28px;letter-spacing:-.5px;color:var(--t1);margin-bottom:8px">5 etapas de detección preventiva.</h3>
+    </div>
+    <div class="proceso-steps">
+      <div class="step">
+        <div class="step-num">01</div>
+        <div class="step-title">Captura</div>
+        <div class="step-desc">Video en tiempo real mediante cámara convencional</div>
+      </div>
+      <div class="step">
+        <div class="step-num">02</div>
+        <div class="step-title">Detección</div>
+        <div class="step-desc">Face Mesh localiza 468 puntos faciales por frame</div>
+      </div>
+      <div class="step">
+        <div class="step-num">03</div>
+        <div class="step-title">Análisis</div>
+        <div class="step-desc">Cálculo de EAR ocular y desplazamiento de nariz</div>
+      </div>
+      <div class="step">
+        <div class="step-num">04</div>
+        <div class="step-title">Identificación</div>
+        <div class="step-desc">Reconocimiento de patrones de fatiga y cabeceos</div>
+      </div>
+      <div class="step">
+        <div class="step-num">05</div>
+        <div class="step-title">Alerta</div>
+        <div class="step-desc">Registro en DB y notificación instantánea al dashboard</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ESTADÍSTICAS -->
+<section id="estadisticas">
+  <div class="wrap reveal">
+    <p class="s-ey">Métricas y Datos Reales</p>
+    <h2 class="s-title">Números que respaldan<br>la solución.</h2>
+    <p class="s-desc">Estadísticas de fuentes oficiales (IMT, AAA Foundation, NHTSA, NAFMP) y resultados obtenidos en pruebas del sistema.</p>
+
+    <!-- sistema -->
+    <div style="margin-top:48px;margin-bottom:16px">
+      <p class="sh-title" style="font-family:var(--disp);font-size:14px;color:var(--t2);font-weight:400">Rendimiento del sistema IA VISION</p>
+    </div>
+    <div class="stats-grid">
+      <div class="stat-card" style="--sc:var(--green)">
+        <div class="stat-num green">~90<span style="font-size:28px">%</span></div>
+        <div class="stat-lbl">Precisión en detección de patrones de fatiga</div>
+        <div class="stat-src">PRUEBAS INTERNAS · CNN</div>
+      </div>
+      <div class="stat-card" style="--sc:var(--cyan)">
+        <div class="stat-num">&lt;1<span style="font-size:28px">s</span></div>
+        <div class="stat-lbl">Tiempo de respuesta y generación de alerta</div>
+        <div class="stat-src">TIEMPO REAL · FLASK</div>
+      </div>
+      <div class="stat-card" style="--sc:var(--amber)">
+        <div class="stat-num amber">500+</div>
+        <div class="stat-lbl">Imágenes etiquetadas para entrenamiento del modelo</div>
+        <div class="stat-src">DATASET PROPIO</div>
+      </div>
+      <div class="stat-card" style="--sc:var(--cyan)">
+        <div class="stat-num">468</div>
+        <div class="stat-lbl">Landmarks faciales analizados por frame en tiempo real</div>
+        <div class="stat-src">MEDIAPIPE · GOOGLE</div>
+      </div>
+    </div>
+
+    <!-- globales -->
+    <div style="margin-top:48px;margin-bottom:16px">
+      <p class="sh-title" style="font-family:var(--disp);font-size:14px;color:var(--t2);font-weight:400">Estadísticas globales que IA VISION combate</p>
+    </div>
+    <div class="stats-grid">
+      <div class="stat-card" style="--sc:var(--red)">
+        <div class="stat-num red">328K</div>
+        <div class="stat-lbl">accidentes anuales relacionados con sueño al volante</div>
+        <div class="stat-src">AAA FOUNDATION</div>
+      </div>
+      <div class="stat-card" style="--sc:var(--red)">
+        <div class="stat-num red">6,400</div>
+        <div class="stat-lbl">muertes anuales relacionadas con somnolencia</div>
+        <div class="stat-src">AAA FOUNDATION</div>
+      </div>
+      <div class="stat-card" style="--sc:var(--amber)">
+        <div class="stat-num amber">40%</div>
+        <div class="stat-lbl">de accidentes de camiones relacionados con fatiga</div>
+        <div class="stat-src">NAFMP</div>
+      </div>
+      <div class="stat-card" style="--sc:var(--amber)">
+        <div class="stat-num amber">20%+</div>
+        <div class="stat-lbl">de accidentes carreteros en México por fatiga</div>
+        <div class="stat-src">IMT · MÉXICO</div>
+      </div>
+    </div>
+
+    <!-- comparativa -->
+    <div style="margin-top:56px">
+      <p class="s-ey" style="margin-bottom:24px">Ventajas Competitivas</p>
+      <h3 style="font-family:var(--disp);font-weight:700;font-size:28px;letter-spacing:-.5px;color:var(--t1);margin-bottom:32px">IA VISION vs Método Tradicional</h3>
+      <div class="comp-table">
+        <table>
+          <thead>
+            <tr>
+              <th>Característica</th>
+              <th>Método Tradicional</th>
+              <th>IA VISION ✓</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td>Supervisión</td><td>Humana y limitada</td><td>Monitoreo 24/7 automático</td></tr>
+            <tr><td>Detección de micro-sueños</td><td>No detecta</td><td>Detección en tiempo real</td></tr>
+            <tr><td>Tiempo de respuesta</td><td>Reacción tardía</td><td>Alerta en menos de 1 segundo</td></tr>
+            <tr><td>Costo operativo</td><td>Alto (personal)</td><td>Bajo · cámara convencional</td></tr>
+            <tr><td>Escalabilidad</td><td>Difícil y costosa</td><td>Escalable por flotilla vía SaaS</td></tr>
+            <tr><td>Registro de eventos</td><td>Manual o inexistente</td><td>Automático con timestamp en DB</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- VIDEO -->
+<section id="video" class="alt-bg">
+  <div class="wrap reveal">
+    <p class="s-ey">Demo en Vivo</p>
+    <h2 class="s-title">Ve el sistema<br>en acción.</h2>
+    <p class="s-desc">
+      Mira cómo IA VISION detecta eventos de somnolencia en tiempo real y los registra en el dashboard de monitoreo.
+    </p>
+
+<div class="video-wrap">
+    <video controls style="width:100%; display:block;">
+        <source src="assets/videos/IA VISION VIDEO.mp4" type="video/mp4">
+        Tu navegador no soporta videos HTML5.
+    </video>
+</div>
+
+  </div>
+</section>
+
+<!-- PREMIOS -->
+<section id="premios">
+  <div class="wrap reveal">
+    <p class="s-ey">Reconocimientos</p>
+
+    <h2 class="s-title">
+      Reconocido por la industria<br>en dos ediciones consecutivas.
+    </h2>
+
+    <p class="s-desc">
+IA VISION fue distinguido en dos ediciones consecutivas de la Feria de
+Proyectos de la Universidad Metropolitana de Monterrey, obteniendo el
+reconocimiento otorgado por representantes de la industria participantes
+en la evaluación de proyectos tecnológicos e innovadores.
+</p>
+
+    <div class="awards-grid">
+
+      <div class="award-card">
+        <div class="award-trophy">01</div>
+
+        <div>
+          <div class="award-place">
+            RECONOCIMIENTO DE LA INDUSTRIA · FERIA DE PROYECTOS UMM
+          </div>
+
+          <div class="award-title">
+            Primer Lugar · Feria de Proyectos
+          </div>
+
+          <div class="award-desc">
+            IA VISION fue seleccionado por representantes de empresas e industria
+participantes como una de las propuestas con mayor potencial de impacto,
+innovación y aplicación práctica.
+          </div>
+        </div>
+      </div>
+
+      <div class="award-card">
+        <div class="award-trophy">02</div>
+
+        <div>
+          <div class="award-place">
+           RECONOCIMIENTO DE LA INDUSTRIA · FERIA DE PROYECTOS UMM
+          </div>
+
+          <div class="award-title">
+            Primer Lugar · Segunda Edición Consecutiva
+          </div>
+
+          <div class="award-desc">
+            El proyecto volvió a ser reconocido por evaluadores provenientes del sector
+industrial, consolidando su propuesta tecnológica y su potencial de aplicación
+en entornos reales de operación y seguridad.
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="gallery-grid">
+
+      <div class="gallery-item">
+        <img src="assets/videos/imagenes/feria 1.jpeg" alt="Primera Feria de Proyectos UMM">
+             alt="Primera Feria de Proyectos UMM">
+      </div>
+
+      <div class="gallery-item">
+        <img src="assets/videos/imagenes/feria 2.jpeg" alt="Segunda Feria de Proyectos UMM">
+             alt="Segunda Feria de Proyectos UMM">
+      </div>
+
+      <div class="gallery-item">
+        <img src="assets/videos/imagenes/dashboard.jpeg"
+             alt="Dashboard IA Vision">
+      </div>
+
+    </div>
+
+  </div>
+</section>
+
+<!-- MODELO DE NEGOCIO -->
+<section id="negocio" class="alt-bg">
+  <div class="wrap reveal">
+    <p class="s-ey">Modelo de Negocio</p>
+    <h2 class="s-title">4 formas de<br>monetización.</h2>
+    <p class="s-desc">IA VISION está diseñado para escalar desde flotillas pequeñas hasta grandes corporativos logísticos con múltiples modelos de negocio.</p>
+    <div class="biz-grid">
+      <div class="biz-card" style="--bc:var(--cyan)">
+        <div class="biz-title">Suscripción Mensual</div>
+        <div class="biz-desc">Las empresas pagan por unidad o vehículo monitoreado. Modelo recurrente ideal para flotillas pequeñas y medianas empresas de logística.</div>
+        <span class="biz-tag">RECURRENTE</span>
+      </div>
+      <div class="biz-card" style="--bc:var(--green)">
+        <div class="biz-title">Licenciamiento Empresarial</div>
+        <div class="biz-desc">Implementación completa por flotilla con soporte técnico dedicado. Orientado a grandes corporativos de transporte y maquinaria industrial.</div>
+        <span class="biz-tag">ENTERPRISE</span>
+      </div>
+      <div class="biz-card" style="--bc:var(--amber)">
+        <div class="biz-title">Hardware + Software</div>
+        <div class="biz-desc">Sistema completo llave en mano: cámara inteligente con software preinstalado. Solución plug-and-play para empresas sin infraestructura tech.</div>
+        <span class="biz-tag">INTEGRADO</span>
+      </div>
+      <div class="biz-card" style="--bc:var(--red)">
+        <div class="biz-title">SaaS en la Nube</div>
+        <div class="biz-desc">Plataforma cloud con monitoreo remoto centralizado, reportes automáticos y análisis predictivo para empresas con múltiples unidades.</div>
+        <span class="biz-tag">CLOUD · SAAS</span>
+      </div>
+    </div>
+
+    <!-- Mercado potencial -->
+    <div style="margin-top:72px">
+      <p class="s-ey">Mercado Potencial</p>
+      <h3 style="font-family:var(--disp);font-weight:700;font-size:28px;letter-spacing:-.5px;color:var(--t1);margin-bottom:32px">Sectores objetivo en México y LATAM.</h3>
+    </div>
+    <div class="mercado-grid">
+      <div class="mkt-card"><span class="mkt-icon">01</span><div class="mkt-name">Transporte de Carga</div><div class="mkt-desc">Operadores de tráiler, rutas foráneas y logística nacional con jornadas nocturnas de alto riesgo.</div></div>
+      <div class="mkt-card"><span class="mkt-icon">02</span><div class="mkt-name">Industria Minera</div><div class="mkt-desc">Operadores de maquinaria pesada en turnos extendidos donde un error puede ser fatal.</div></div>
+      <div class="mkt-card"><span class="mkt-icon">03</span><div class="mkt-name">Construcción</div><div class="mkt-desc">Excavadoras, grúas y montacargas requieren operadores alertas en entornos de alto riesgo.</div></div>
+      <div class="mkt-card"><span class="mkt-icon">04</span><div class="mkt-name">Transporte Público</div><div class="mkt-desc">Operadores de autobús y camionetas de pasajeros en rutas metropolitanas e interurbanas.</div></div>
+      <div class="mkt-card"><span class="mkt-icon">05</span><div class="mkt-name">Flotillas Empresariales</div><div class="mkt-desc">Empresas distribuidoras con flota propia que requieren cumplimiento de NOM-087.</div></div>
+      <div class="mkt-card"><span class="mkt-icon">06</span><div class="mkt-name">Expansión LATAM</div><div class="mkt-desc">Escalabilidad hacia Latinoamérica donde la problemática de fatiga vial es igual de crítica.</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- DESARROLLADORES -->
+<section id="desarrolladores">
+  <div class="wrap reveal">
+    <p class="s-ey">El Equipo</p>
+    <h2 class="s-title">Dos personas,<br>una visión.</h2>
+    <p class="s-desc">Estudiantes de Ingeniería Administradora de Sistemas de la Universidad Metropolitana de Monterrey.</p>
+    <div class="devs-grid">
+
+      <div class="dev-card">
+        <div class="dev-avatar">AR</div>
+        <div class="dev-name">Eduardo Alejandro<br>Rocha Moreno</div>
+        <div class="dev-role">Project Lead & AI Developer</div>
+        <div class="dev-career">ING. ADMINISTRADORA DE SISTEMAS · UMM</div>
+        <div class="dev-tags">
+          <span class="dev-tag">Python</span>
+          <span class="dev-tag">Computer Vision</span>
+          <span class="dev-tag">MediaPipe</span>
+          <span class="dev-tag">OpenCV</span>
+        </div>
+        <p class="dev-bio">
+          <p class="dev-bio">
+  Co-creador de IA VISION y líder principal del proyecto. Responsable de la
+  planificación, desarrollo del sistema de visión artificial, implementación
+  de algoritmos de detección en tiempo real con Python, optimización del
+  rendimiento, pruebas funcionales y presentación del proyecto ante jurados
+  y empresas participantes.
+</p>
+        </p>
+        <div class="dev-links">
+          <a href="https://www.linkedin.com/in/alejandro-rocha-b19881300" target="_blank" class="dev-link">
+            <svg viewBox="0 0 24 24"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
+            LinkedIn
+          </a>
+        </div>
+      </div>
+
+      <div class="dev-card">
+        <div class="dev-avatar">RM</div>
+        <div class="dev-name">Randy Mancilla<br>Zamudio</div>
+        <div class="dev-role">Software Developer</div>
+        <div class="dev-career">ING. ADMINISTRADORA DE SISTEMAS · UMM</div>
+        <div class="dev-tags">
+          <span class="dev-tag">Flask</span>
+          <span class="dev-tag">Dashboard</span>
+          <span class="dev-tag">SQLite</span>
+          <span class="dev-tag">Frontend</span>
+        </div>
+        <p class="dev-bio">
+          <p class="dev-bio">
+  Co-creador de IA VISION. Responsable del desarrollo del dashboard de
+  monitoreo, integración del sistema web, gestión de base de datos,
+  visualización de eventos en tiempo real y apoyo en la planificación,
+  desarrollo y presentación del proyecto.
+</p>
+        </p>
+        <div class="dev-links">
+          <a href="https://www.linkedin.com/in/randy-mancilla-zamudio-b924a8375/" target="_blank" class="dev-link">
+            <svg viewBox="0 0 24 24"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
+            LinkedIn
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CONTACTO -->
+<section id="contacto" class="alt-bg">
+  <div class="wrap reveal">
+    <p class="s-ey">Contacto</p>
+    <h2 class="s-title">¿Interesado en<br>IA VISION?</h2>
+    <div class="contact-box">
+      <h3 class="contact-title">Hablemos.</h3>
+      <p class="contact-desc">
+        Si eres inversor, empresa logística, institución o simplemente te interesa
+        conocer más sobre el proyecto, contáctanos directamente. Estamos abiertos
+        a colaboraciones, pilotos y oportunidades de desarrollo en México y LATAM.
+      </p>
+      <div class="contact-links">
+        <a href="https://www.linkedin.com/in/alejandro-rocha-b19881300" target="_blank" class="btn-p">LinkedIn · Alejandro</a>
+        <a href="https://www.linkedin.com/in/randy-mancilla-zamudio-b924a8375/" target="_blank" class="btn-s">LinkedIn · Randy</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-logo">IA<span>&nbsp;VISION</span></div>
+  <p class="footer-copy">© 2026 · EDUARDO A. ROCHA MORENO & RANDY MANCILLA ZAMUDIO · UMM MONTERREY · PREMIO A LA INNOVACIÓN MEXICANA</p>
+</footer>
+
+<script>
+  const obs = new IntersectionObserver(entries => {
+    entries.forEach((e,i) => {
+      if(e.isIntersecting){
+        setTimeout(()=>e.target.classList.add('visible'), i*80);
+        obs.unobserve(e.target);
+      }
+    });
+  },{threshold:.08});
+  document.querySelectorAll('.reveal').forEach(el=>obs.observe(el));
+</script>
+</body>
+</html>
